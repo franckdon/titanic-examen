@@ -15,10 +15,7 @@ class TitanicDataProcessor:
         self.test_data = pd.read_csv(test_file)
     def preprocess_data(self):
         self._feature_engineering()
-        # self._encode_categorical_features()
-        # self._drop_unused_columns()
-        # self._fill_missing_values()
-        # self._feature_scaling()
+        self._encode_categorical_features()
     
     def train_model(self):
         X = self.train_data.drop('Survived', axis=1)
@@ -55,13 +52,37 @@ class TitanicDataProcessor:
         bins = [0, 18, 35, 60, np.inf]
         labels = ['Child', 'Young Adult', 'Adult', 'Senior']
         data['AgeGroup'] = pd.cut(data['Age'], bins, labels=labels)
-        
-        # Exemple 3 : Création de caractéristiques familiales
+
         data['FamilySize'] = data['SibSp'] + data['Parch']
         data['IsAlone'] = 0
         data.loc[data['FamilySize'] == 0, 'IsAlone'] = 1
     
         return data
+    
+    def _encode_categorical_features(self, data=None):
+        if data is None:
+            data = self.train_data
+        from sklearn.preprocessing import LabelEncoder
+        label_encoder = LabelEncoder()
+        data['Title'] = label_encoder.fit_transform(data['Title'])
+        return data
+    
+    def display_data_statistics(self, data):
+        print("Taille du DataFrame :")
+        print(data.shape)
+
+        print("\nStatistiques descriptives pour les caractéristiques numériques :")
+        print(data.describe())
+
+        print("\nNombre de valeurs uniques pour les caractéristiques catégorielles :")
+        categorical_features = data.select_dtypes(include=['object'])
+        for column in categorical_features:
+            unique_values = data[column].nunique()
+            print(f"{column}: {unique_values}")
+
+        print("\nValeurs manquantes par colonne :")
+        missing_values = data.isnull().sum()
+        print(missing_values[missing_values > 0])
     
     
 class ProjectInitializer:
